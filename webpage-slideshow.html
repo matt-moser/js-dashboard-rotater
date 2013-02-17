@@ -1,0 +1,141 @@
+<html>
+<head><title>Digital Scrumboard Slideshow</title></head>
+<body>
+	<div id="buttons">
+		<button id="pauseBtn"><i class="icon-pause"></i> Pause</button>
+		<button id="resumeBtn"><i class="icon-play"></i> Resume</button>
+		<button id="advanceBtn"><i class="icon-step-forward"></i> Next Page</button>
+		<button id="openBtn">Open <strong>http://www.google.com</strong> in a new window to interact</a></button>
+	</div>
+	<div id="overlay">Cannot interact with slideshow.  Pause for options.</div>
+</body>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script>
+	/*
+	 * Recommend no less than 10000 millis for duration.  Too short, and the pages will not have a chance to load.
+	 */
+	var pages = [
+	  new Page('http://redditmetrics.com/',20000),
+	  new Page('http://www.kickstarter.com/discover',60000),
+	  new Page('http://www.charitynavigator.org/index.cfm?bay=search.summary&orgid=4884',60000)
+	  //new Page(<url>,<duration in millis>)
+	];
+	/*
+	 *
+	 *
+	 *
+	 *
+	 *
+	 *  
+	 *
+	 *
+	 *
+	 *
+	 *
+	 *
+	 */
+	function Page(url, duration){
+	  this.url = url;
+	  this.duration = duration;
+	};
+	var pageIdx = -1, timeout;
+
+	$iframe = $('<iframe>', {frameborder: 0, scrolling: 'yes', height:'100%', width:'100%'})
+	$iframe.appendTo('body');
+
+	advance = function(){
+		pageIdx = (pageIdx+1)%pages.length;
+		$iframe.attr('src', pages[pageIdx].url);
+		$('#openBtn strong').text(pages[pageIdx].url);
+		$iframe.load(function(){
+			$iframeDoc = $iframe.contents()
+			if($iframeDoc.length == 0)
+				return;
+			$iframeBody = $iframe.contents().find('body')
+			$iframeBody.animate({ scrollTop: $iframeDoc.height() }, pages[pageIdx].duration);
+		})
+	};
+	resume = function (){
+		advance();
+		timeout = setTimeout(function() {
+			resume();
+		}, pages[pageIdx].duration);
+	};
+	pause = function(){clearTimeout(timeout);};
+	
+	$('#pauseBtn').click(function(){
+		pause();
+		$('#buttons').addClass('paused');
+	});
+	$('#resumeBtn').click(function(){
+		resume();
+		$('#buttons').removeClass('paused');
+	});
+	$('#advanceBtn').click(advance);
+	$('#openBtn').click(function(){window.open(pages[pageIdx].url);});
+	$('#overlay').click(function(){
+		$(this).stop().css('opacity',1).fadeTo(4000, 0);
+	});
+	resume();
+</script>
+<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/font-awesome/2.0/css/font-awesome.css">
+<style type="text/css">
+	@import url(http://reset5.googlecode.com/hg/reset.min.css);
+	#buttons {
+		position:fixed;
+		top:0;
+		left:0;
+		width:100%;
+		background-color:transparent;
+		opacity:0.5;
+		z-index:101;
+		padding:5px;
+	}
+
+	#buttons:hover,#buttons.paused {
+		opacity:1;
+	}
+
+	#buttons.paused {
+		background-color:rgba(255,0,0,0.5);
+	}
+
+	button {
+		display:none;
+		padding:5px!important;
+	}
+
+	#buttons.paused button,#resumeBtn,#pauseBtn {
+		display:inline-block;
+	}
+
+	button,#pauseBtn,#buttons.paused #resumeBtn,#advanceBtn {
+		background-color:#eee;
+	}
+
+	#resumeBtn {
+		background-color:#9ACD32;
+	}
+
+	#buttons.paused #pauseBtn {
+		background-color:#FFC0CB;
+	}
+
+	#overlay {
+		position:absolute;
+		left:0;
+		top:0;
+		height:100%;
+		width:100%;
+		text-align:center;
+		z-index:100;
+		cursor:default;
+		font-size:100px;
+		padding-top:100px;
+		opacity:0;
+		background-color:#666;
+		color:#fff;
+		font-family:sans-serif;
+	}
+</style>
+</html>
